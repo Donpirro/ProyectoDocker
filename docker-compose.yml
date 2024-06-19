@@ -1,37 +1,32 @@
+version: '3.8'
+
 services:
-  nginx:
-    container_name: nginx
-    image: nginx:latest
-    ports:
-      - "80:80"
+  portainer:
+    image: portainer/portainer
+    privileged: true
+    container_name: portainer
     volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./templates:/usr/share/nginx/html
-    networks:
-      - app-network
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+    restart: unless-stopped
 
-  jenkins:
-    container_name: jenkins
-    image: jenkins/jenkins:lts
+  nginx-proxy-manager:
+    image: 'jc21/nginx-proxy-manager:latest'
+    restart: unless-stopped
     ports:
-      - "8080:8080"
+      - '80:80'
+      - '443:443'
+      - '81:81'
     volumes:
-      - ./jenkins_home:/var/jenkins_home
-    networks:
-      - app-network
+      - npm_data:/data
+      - npm_letsencrypt:/etc/letsencrypt
 
-  sonarqube:
-    container_name: sonarqube
-    image: sonarqube:latest
-    ports:
-      - "9000:9000"
-    environment:
-      - SONARQUBE_JDBC_USERNAME=sonar
-      - SONARQUBE_JDBC_PASSWORD=sonar
-      - SONARQUBE_JDBC_URL=jdbc:h2:tcp://localhost:9092/sonar
-    networks:
-      - app-network
+volumes:
+  portainer_data:
+  npm_letsencrypt:
+  npm_data:
 
 networks:
-  app-network:
-    driver: bridge
+  default:
+    external: true
+    name: portainer-network
